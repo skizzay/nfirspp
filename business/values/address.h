@@ -2,7 +2,7 @@
 #ifndef NFIRSPP_BUSINESS_ADDRESS_H__
 #define NFIRSPP_BUSINESS_ADDRESS_H__
 
-#include "bits/value_component.h"
+#include "business/bits/value_component.h"
 #include <utility>
 
 namespace nfirspp {
@@ -397,30 +397,53 @@ public:
 
 class us_street final {
 public:
-   inline street_direction prefix() const noexcept {
-      return prefix_;
+   inline us_street(const street_direction &p, const street_name &n, const street_type &t, const street_direction &s={}) :
+      prefix_(p),
+      name_(n),
+      type_(t),
+      suffix_(s)
+   {
+      if (!valid()) {
+         throw std::invalid_argument{"Not a valid street."};
+      }
    }
 
-   inline const street_name & name() const noexcept {
-      return street_name_;
+   inline us_street(const street_name &n, const street_type &t, const street_direction &s={}) :
+      us_street{{}, n, t, s}
+   {
    }
 
-   inline street_type type() const noexcept {
-      return street_type_;
-   }
+   inline us_street() = default;
+   inline us_street(const us_street &) = default;
+   inline us_street(us_street &&) = default;
 
-   inline street_direction suffix() const noexcept {
-      return suffix_;
-   }
+   inline us_street &  operator =(const us_street &) = default;
+   inline us_street & operator =(us_street &&) = default;
 
    inline bool valid() const noexcept {
       return name().valid() && type().valid();
    }
 
+   inline const street_direction & prefix() const noexcept {
+      return prefix_;
+   }
+
+   inline const street_name & name() const noexcept {
+      return name_;
+   }
+
+   inline const street_type & type() const noexcept {
+      return type_;
+   }
+
+   inline const street_direction & suffix() const noexcept {
+      return suffix_;
+   }
+
 private:
    street_direction prefix_;
-   street_name street_name_;
-   street_type street_type_;
+   street_name name_;
+   street_type type_;
    street_direction suffix_;
 };
 
@@ -437,13 +460,12 @@ public:
       }
    }
 
-   fips_county_code() = default;
-   fips_county_code(const fips_county_code &) noexcept = default;
-   fips_county_code(fips_county_code &&) noexcept = default;
-   ~fips_county_code() noexcept = default;
+   inline fips_county_code() = default;
+   inline fips_county_code(const fips_county_code &) = default;
+   inline fips_county_code(fips_county_code &&) = default;
 
-   fips_county_code & operator =(const fips_county_code &) noexcept = default;
-   fips_county_code & operator =(fips_county_code &&) noexcept = default;
+   inline fips_county_code &  operator =(const fips_county_code &) = default;
+   inline fips_county_code & operator =(fips_county_code &&) = default;
 
    inline bool valid() const {
       return (0 < value) && (value < 1000);
@@ -460,29 +482,25 @@ private:
 
 class address final {
 public:
-   inline const street_number & number() const noexcept {
-      return number_;
+   inline address(const street_number &n, const us_street &s, const apartment &a, const us_city &c, const us_state &st, const us_zip_code &z) :
+      number_(n),
+      street_(s),
+      apt_(a),
+      city_(c),
+      state_(st),
+      zip_code_(z)
+   {
+      if (!valid()) {
+         throw std::invalid_argument{"Not a valid address."};
+      }
    }
 
-   inline const us_street & street() const noexcept {
-      return street_;
-   }
+   inline address() = default;
+   inline address(const address &) = default;
+   inline address(address &&) = default;
 
-   inline const us_city & city() const noexcept {
-      return city_;
-   }
-
-   inline us_state state() const noexcept {
-      return state_;
-   }
-
-   inline us_zip_code zip_code() const noexcept {
-      return zip_code_;
-   }
-
-   inline apartment apartment_number() const noexcept {
-      return apartment_;
-   }
+   inline address &  operator =(const address &) = default;
+   inline address & operator =(address &&) = default;
 
    inline bool valid() const noexcept {
       return number().valid() &&
@@ -491,10 +509,34 @@ public:
              state().valid();
    }
 
+   inline const street_number & number() const noexcept {
+      return number_;
+   }
+
+   inline const us_street & street() const noexcept {
+      return street_;
+   }
+
+   inline const apartment & apt() const noexcept {
+      return apt_;
+   }
+
+   inline const us_city & city() const noexcept {
+      return city_;
+   }
+
+   inline const us_state & state() const noexcept {
+      return state_;
+   }
+
+   inline const us_zip_code & zip_code() const noexcept {
+      return zip_code_;
+   }
+
 private:
    street_number number_;
    us_street street_;
-   apartment apartment_;
+   apartment apt_;
    us_city city_;
    us_state state_;
    us_zip_code zip_code_;

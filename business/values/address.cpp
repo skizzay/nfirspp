@@ -1,5 +1,5 @@
 // vim: sw=3 ts=3 expandtab cindent
-#include "business/address.h"
+#include "business/values/address.h"
 
 namespace nfirspp {
 namespace business {

@@ -2,7 +2,7 @@
 #ifndef NFIRSPP_BUSINESS_NAME_H__
 #define NFIRSPP_BUSINESS_NAME_H__
 
-#include "bits/value_component.h"
+#include "business/bits/value_component.h"
 
 namespace nfirspp {
 namespace business {

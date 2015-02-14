@@ -7,6 +7,8 @@ find_package(Threads REQUIRED)
 add_executable(unit_tests
       main.cpp
       business/abbreviated_and_full_tests.cpp
+      business/address_tests.cpp
+      business/fdid_tests.cpp
       business/value_component_tests.cpp
    )
 
