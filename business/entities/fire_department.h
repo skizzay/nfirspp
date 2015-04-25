@@ -4,40 +4,56 @@
 
 #include "business/values/address.h"
 #include "business/values/fdid.h"
-#include <boost/uuid>
+#include <boost/uuid/uuid.hpp>
+#include <deque>
+#include <memory>
 
 namespace firepp {
 namespace business {
 
-class fire_department final {
+template<class IdContainer=std::deque<boost::uuid>, class DomainEventDispatcher=cddd::messaging::dispatcher<>, class DomainEventContainer=std::deque<cddd::cqrs::domain_event_ptr>>
+class fire_department final : public cddd::cqrs::basic_artifact<DomainEventDispatcher, DomainEventContainer> {
 public:
-   inline const fdid & get_fdid() const noexcept {
-      return fdid_;
+   using id_container_type = IdContainer;
+   using cddd::cqrs::basic_artifact<DomainEventDispatcher, DomainEventContainer>::size_type;
+
+   fire_department(size_type revision=0,
+                   std::shared_ptr<DomainEventDispatcher> dispatcher=std::make_shared<DomainEventDispatcher>()) :
+      cddd::cqrs::basic_artifactor<DomainEventDispatcher, DomainEventContainer>{revision, dispatcher},
+      fire_department_id{},
+      address{},
+      email{},
+      station_ids{},
+      firefighter_ids{}
+   {
    }
 
-   inline us_state get_state() const noexcept {
-      return get_address().state();
-   }
-
-   inline const address & get_address() const noexcept {
-      return address_;
-   }
-
-   inline const & email_address get_email_address() const noexcept {
-      return email_;
-   }
-
-   inline bool valid() const noexcept {
-      return get_fdid().valid();
+   void enroll_firefighter(const cddd::cqrs::object_id &id) {
+      if (id.is_null()) {
+         throw cddd::cqrs::null_id_exception{"fire firefighter id"};
+      }
+      else {
+         this->apply_change(firefighter_enrolled_into_fire_department{, id});
+      }
    }
 
 private:
-   fdid fdid_;
-   address address_;
-   email_address email_;
+   fdid fdid;
+   address address;
+   email_address email;
+   id_container_type station_ids;
+   id_container_type firefighter_ids;
 };
 
 }
+}
+
+
+namespace std {
+
+template<class IdContainer, class Alloc>
+class uses_allocator<firepp::business::fire_department<IdContainer>, Alloc> : public uses_allocator<IdContainer, Alloc> {};
+
 }
 
 #endif

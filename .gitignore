@@ -2,3 +2,11 @@
 build
 .*.swp
 *~
+
+bii/.hive.db
+bii/cmake/
+bii/deps/
+bii/lib/
+bii/policies.bii
+bii/settings.bii
+bin/
