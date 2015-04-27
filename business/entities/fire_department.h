@@ -2,58 +2,38 @@
 #ifndef NFIRSPP_BUSINESS_FIRE_DEPARTMENT_H__
 #define NFIRSPP_BUSINESS_FIRE_DEPARTMENT_H__
 
+#include "business/events/firefighter_enrolled_into_fire_department.h"
 #include "business/values/address.h"
 #include "business/values/fdid.h"
-#include <boost/uuid/uuid.hpp>
-#include <deque>
+#include "cqrs/artifact.h"
 #include <memory>
+#include <vector>
 
 namespace firepp {
 namespace business {
 
-template<class IdContainer=std::deque<boost::uuid>, class DomainEventDispatcher=cddd::messaging::dispatcher<>, class DomainEventContainer=std::deque<cddd::cqrs::domain_event_ptr>>
-class fire_department final : public cddd::cqrs::basic_artifact<DomainEventDispatcher, DomainEventContainer> {
+class fire_station;
+
+class fire_department final : public cddd::cqrs::artifact {
 public:
-   using id_container_type = IdContainer;
-   using cddd::cqrs::basic_artifact<DomainEventDispatcher, DomainEventContainer>::size_type;
+   typedef boost::uuids::uuid id_type;
+   typedef std::vector<id_type> id_container_type;
+   using cddd::cqrs::artifact::size_type;
 
-   fire_department(size_type revision=0,
-                   std::shared_ptr<DomainEventDispatcher> dispatcher=std::make_shared<DomainEventDispatcher>()) :
-      cddd::cqrs::basic_artifactor<DomainEventDispatcher, DomainEventContainer>{revision, dispatcher},
-      fire_department_id{},
-      address{},
-      email{},
-      station_ids{},
-      firefighter_ids{}
-   {
+   fire_department(const id_type &id);
+
+   const id_type & id() const {
+      return fire_department_id;
    }
 
-   void enroll_firefighter(const cddd::cqrs::object_id &id) {
-      if (id.is_null()) {
-         throw cddd::cqrs::null_id_exception{"fire firefighter id"};
-      }
-      else {
-         this->apply_change(firefighter_enrolled_into_fire_department{, id});
-      }
-   }
+   void enroll_firefighter(const id_type &id);
+   void acquire_station(const id_type &station_id);
 
 private:
-   fdid fdid;
-   address address;
-   email_address email;
-   id_container_type station_ids;
-   id_container_type firefighter_ids;
+   id_type fire_department_id;
 };
 
 }
-}
-
-
-namespace std {
-
-template<class IdContainer, class Alloc>
-class uses_allocator<firepp::business::fire_department<IdContainer>, Alloc> : public uses_allocator<IdContainer, Alloc> {};
-
 }
 
 #endif

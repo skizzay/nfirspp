@@ -4,7 +4,7 @@
 
 namespace {
 
-using namespace nfirspp::business;
+using namespace firepp::business;
 
 TEST(fdid_tests, valid_after_default_construction_should_return_false) {
    // Given

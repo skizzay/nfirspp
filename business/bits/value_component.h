@@ -8,7 +8,7 @@
 #include <string>
 #include <experimental/string_view>
 
-namespace nfirspp {
+namespace firepp {
 namespace business {
 namespace details_ {
 

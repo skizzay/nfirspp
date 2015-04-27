@@ -3,20 +3,16 @@
 #include <gtest/gtest.h>
 #include <random>
 
+extern std::mt19937 twister;
+
 namespace {
 
-using namespace nfirspp::business;
+using namespace firepp::business;
 
-inline uint16_t random(uint16_t low, uint16_t high) {
-   std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(::testing::UnitTest::GetInstance()->random_seed());
-   std::mt19937_64 engine{seed};
-   std::uniform_int_distribution<uint16_t> generate{low, high};
-   return generate(engine);
-}
-
-inline uint16_t random(uint16_t low) {
-   return random(low, std::numeric_limits<uint16_t>::max());
-}
+auto random = [] (auto ... a) {
+   std::uniform_int_distribution<std::common_type_t<decltype(a)...>> generate{a...};
+   return generate(twister);
+};
 
 
 TEST(us_street_tests, valid_given_valid_name_and_type_should_return_true) {
@@ -63,7 +59,7 @@ TEST(fips_county_code_tests, constructor_given_0_should_throw_invalid_argument) 
 
 TEST(fips_county_code_tests, constructor_given_too_large_value_should_throw_invalid_argument) {
    // given, when, then
-   ASSERT_THROW(fips_county_code{random(0)}, std::invalid_argument);
+   ASSERT_THROW(fips_county_code{random(uint16_t{0})}, std::invalid_argument);
 }
 
 
@@ -81,7 +77,7 @@ TEST(fips_county_code_tests, valid_after_default_construction_should_return_fals
 
 TEST(fips_county_code_tests, valid_after_valid_construction_should_return_true) {
    // given
-   fips_county_code target{random(1, 999)};
+   fips_county_code target{random(uint16_t{1}, uint16_t{999})};
 
    // when
    bool actual = target.valid();

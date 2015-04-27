@@ -1,7 +1,7 @@
 // vim: sw=3 ts=3 expandtab cindent
 #include "business/values/address.h"
 
-namespace nfirspp {
+namespace firepp {
 namespace business {
 
 const street_direction street_direction::east{"E", "East"};

@@ -2,7 +2,7 @@
 #include "business/bits/value_component.h"
 #include <gtest/gtest.h>
 
-using namespace nfirspp::business::details_;
+using namespace firepp::business::details_;
 
 
 namespace {

@@ -4,7 +4,7 @@
 
 #include "business/bits/value_component.h"
 
-namespace nfirspp {
+namespace firepp {
 namespace business {
 
 namespace details_ {
