@@ -2,18 +2,22 @@
 #ifndef NFIRSPP_BUSINESS_FIREFIGHTER_ENROLLED_INTO_FIRE_DEPARTMENT_H__
 #define NFIRSPP_BUSINESS_FIREFIGHTER_ENROLLED_INTO_FIRE_DEPARTMENT_H__
 
-#include <boost/uuid/uuid.hpp>
+#include "business/events/event_base.h"
 
 namespace firepp {
 namespace business {
 
-class firefighter_enrolled_into_fire_department {
+class firefighter_enrolled_into_fire_department final : public event_base {
 public:
    typedef boost::uuids::uuid id_type;
 
-   firefighter_enrolled_into_fire_department(const id_type &firefighter_id, const id_type &fire_department_id) :
+   firefighter_enrolled_into_fire_department(const id_type &user_id, const timestamp_type &ts_,
+                                             const id_type &firefighter_id, const id_type &fire_department_id,
+                                             const boost::gregorian::date &ed_) :
+      event_base{user_id, ts_},
       firefighter_id_(firefighter_id),
-      fire_department_id_(fire_department_id)
+      fire_department_id_(fire_department_id),
+      effective_date_{ed_}
    {
    }
                                         
@@ -31,9 +35,14 @@ public:
       return fire_department_id_;
    }
 
+   const boost::gregorian::date & effective_date() const {
+      return effective_date_;
+   }
+
 private:
    id_type firefighter_id_;
    id_type fire_department_id_;
+   boost::gregorian::date effective_date_;
 };
 
 }

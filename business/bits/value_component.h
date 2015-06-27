@@ -18,14 +18,14 @@ public:
    static_assert((0 < N) && (N <= std::numeric_limits<uint8_t>::max()),
                 "N must be in (0, std::numeric_limits<uint8_t>::max()].");
 
-   inline value_component() noexcept :
+   constexpr value_component() noexcept :
       value()
    {
       value[0] = '\0';
    }
 
    template<class... Args>
-   explicit inline value_component(std::experimental::string_view v, Args && ... args) :
+   explicit constexpr value_component(std::experimental::string_view v, Args && ... args) :
       value()
    {
       using std::forward;

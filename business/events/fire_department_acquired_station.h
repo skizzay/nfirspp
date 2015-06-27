@@ -3,16 +3,18 @@
 #define NFIRSPP_BUSINESS_FIRE_DEPARTMENT_ACQUIRED_STATION_H__
 
 #include "business/values/address.h"
-#include <boost/uuid/uuid.hpp>
+#include "business/events/event_base.h"
 
 namespace firepp {
 namespace business {
 
-class fire_department_acquired_station {
+class fire_department_acquired_station final : public event_base {
 public:
    typedef boost::uuids::uuid id_type;
 
-   fire_department_acquired_station(const id_type &fire_department_id, const id_type &fire_station_id) :
+   fire_department_acquired_station(const id_type &user_id, const timestamp_type &ts_,
+                                    const id_type &fire_department_id, const id_type &fire_station_id) :
+      event_base{user_id, ts_},
       fire_department_id_(fire_department_id),
       fire_station_id_(fire_station_id)
    {
