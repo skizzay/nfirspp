@@ -11,9 +11,9 @@ class firefighter_enrolled_into_fire_department final : public event_base {
 public:
    typedef boost::uuids::uuid id_type;
 
-   firefighter_enrolled_into_fire_department(const id_type &user_id, const timestamp_type &ts_,
-                                             const id_type &firefighter_id, const id_type &fire_department_id,
-                                             const boost::gregorian::date &ed_) :
+   inline firefighter_enrolled_into_fire_department(const id_type &user_id, const timestamp_type &ts_,
+                                                    const id_type &firefighter_id, const id_type &fire_department_id,
+                                                    const boost::gregorian::date &ed_) :
       event_base{user_id, ts_},
       firefighter_id_(firefighter_id),
       fire_department_id_(fire_department_id),
@@ -22,20 +22,20 @@ public:
    }
                                         
    firefighter_enrolled_into_fire_department() = delete;
-   firefighter_enrolled_into_fire_department(const firefighter_enrolled_into_fire_department &) = default;
-   firefighter_enrolled_into_fire_department(firefighter_enrolled_into_fire_department &&) = default;
-   firefighter_enrolled_into_fire_department & operator =(const firefighter_enrolled_into_fire_department &) = default;
-   firefighter_enrolled_into_fire_department & operator =(firefighter_enrolled_into_fire_department &&) = default;
+   inline firefighter_enrolled_into_fire_department(const firefighter_enrolled_into_fire_department &) = default;
+   inline firefighter_enrolled_into_fire_department(firefighter_enrolled_into_fire_department &&) = default;
+   inline firefighter_enrolled_into_fire_department & operator =(const firefighter_enrolled_into_fire_department &) = default;
+   inline firefighter_enrolled_into_fire_department & operator =(firefighter_enrolled_into_fire_department &&) = default;
 
-   const id_type & firefighter_id() const {
+   inline const id_type & firefighter_id() const {
       return firefighter_id_;
    }
 
-   const id_type & fire_department_id() const {
+   inline const id_type & fire_department_id() const {
       return fire_department_id_;
    }
 
-   const boost::gregorian::date & effective_date() const {
+   inline const boost::gregorian::date & effective_date() const {
       return effective_date_;
    }
 

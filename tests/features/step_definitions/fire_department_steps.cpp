@@ -1,5 +1,7 @@
 // vim: sw=3 ts=3 expandtab cindent
 #include "business/entities/fire_department.h"
+#include "infrastructure/optional.h"
+#include <fakeit.hpp>
 #include <kerchow/kerchow.h>
 #include <boost/uuid/uuid_generators.hpp>
 #include <gtest/gtest.h>
@@ -7,8 +9,10 @@
 
 using cucumber::ScenarioScope;
 using namespace firepp::business;
+using namespace fakeit;
 namespace bu = boost::uuids;
-using dispatcher_type = cddd::messaging::dispatcher<>;
+typedef bu::uuid id_type;
+using firepp::infrastructure::details_::optional_value;
 
 namespace {
 
@@ -16,14 +20,19 @@ class active_fd {
 public:
    us_state state_value;
    fdid fdid_value;
-   std::unique_ptr<fire_department> fd;
+
+   std::vector<id_type> firefighters;
+   std::vector<id_type> stations;
+   Mock<firepp::infrastructure::session> session;
+   optional_value<fire_department> fd;
 };
 
 
 GIVEN("I have a fire department") {
    ScenarioScope<active_fd> context;
    bu::basic_random_generator<decltype(kerchow::picker)> generate_id{kerchow::picker};
-   context->fd = std::make_unique<fire_department>(std::make_shared<dispatcher_type>(), generate_id());
+   context->fd.emplace(context->firefighters, context->stations,
+                       context->session.get(), generate_id());
 }
 
 
