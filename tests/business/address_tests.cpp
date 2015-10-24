@@ -52,7 +52,7 @@ TEST(fips_county_code_tests, constructor_given_0_should_throw_invalid_argument) 
 
 TEST(fips_county_code_tests, constructor_given_too_large_value_should_throw_invalid_argument) {
    // given, when, then
-   ASSERT_THROW(fips_county_code{kerchow::picker.pick<uint16_t>(0)}, std::invalid_argument);
+   ASSERT_THROW(fips_county_code{kerchow::picker.pick<uint16_t>(1000)}, std::invalid_argument);
 }
 
 
