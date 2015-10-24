@@ -48,7 +48,7 @@ public:
       return boost::apply_visitor(visitor, value);
    }
 
-   constexpr location_type type() const {
+   location_type type() const {
       return apply_visitor(location_type_extractor{});
    }
 
@@ -66,26 +66,26 @@ public:
 
 private:
    template<class T>
-   explicit constexpr location(T &&t) :
-      value{std::move(t)}
+   explicit inline location(T &&t) :
+      value{std::forward<T>(t)}
    {
    }
 
    struct location_type_extractor final : boost::static_visitor<location_type> {
-      location_type operator()(const incident_address &addr) const {
+      constexpr location_type operator()(const incident_address &addr) const {
          return static_cast<location_type>(addr.type);
       }
 
-      location_type operator()(const directions &) const {
+      constexpr location_type operator()(const directions &) const {
          return location_type::directions;
       }
 
-      location_type operator()(const intersection &) const {
+      constexpr location_type operator()(const intersection &) const {
          return location_type::intersection;
       }
    };
 
-   boost::variant<incident_address, intersection, std::string> value;
+   boost::variant<incident_address, intersection, directions> value;
 };
 
 }

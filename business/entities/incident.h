@@ -1,9 +1,11 @@
 // vim: sw=3 ts=3 expandtab cindent
 #pragma once
 
+#include "business/entities/incident_dispatcher.h"
 #include "business/values/fdid.h"
 #include "business/values/location.h"
 #include "business/values/mutual_aid_type.h"
+#include "infrastructure/incident_number_provider.h"
 #include "infrastructure/optional.h"
 #include "infrastructure/session.h"
 #include "cqrs/artifact.h"
@@ -12,8 +14,7 @@
 namespace firepp {
 namespace business {
 
-class dispatched_as_primary_response;
-class dispatched_as_mutual_aid;
+class incident_sized_up;
 #if 0
 class incident_under_control;
 class incident_terminated;
@@ -26,22 +27,28 @@ class incident_command_established;
 #endif
 
 class incident final : public cddd::cqrs::artifact {
+   template<class T>
+   using optional = infrastructure::details_::optional_value<T>;
+
 public:
    using id_type = boost::uuids::uuid;
-   using timestamp_type = boost::gregorian::date;
+   using timestamp_type = boost::posix_time::ptime;
 
    incident(infrastructure::session &session,
+            infrastructure::incident_number_provider &inp,
             const id_type &id);
 
-   void dispatch_as_primary_response(const id_type &fire_department_id,
-                                     const timestamp_type &alarm_time,
-                                     size_t incident_number,
-                                     const id_type &location_id,
-                                     uint8_t incident_type_code);
-   void dispatch_as_mutual_aid(const id_type &fire_department_id,
-                               const timestamp_type &alarm_time,
-                               size_t incident_number,
-                               const mutual_aid_type &type);
+   void establish_initial_sizeup(const id_type &location_id,
+                                 uint16_t incident_type_code,
+                                 const optional<id_type> &reporter);
+   void update_sizeup(const id_type &location_id,
+                      uint8_t incident_type_code);
+
+   void dispatch_for_response(const id_type &fire_department_id,
+                              const timestamp_type &alarm_time,
+                              const mutual_aid_type &type);
+   void dispatch_multiple_units(const timestamp_type &alarm_time,
+                                std::vector<std::tuple<id_type, mutual_aid_type>> responding_department_ids);
 #if 0
    void mark_as_controlled(const timestamp_type &controlled_time);
    void clear_all(const timestamp_type &clear_time);
@@ -71,37 +78,16 @@ public:
 #endif
 
 private:
-   template<class T>
-   using optional_ = infrastructure::details_::optional_value<T>;
-
-   struct fd_response {
-      id_type fire_department_id;
-      std::size_t incident_number;
-      timestamp_type alarm_time;
-      timestamp_type arrival_time;
-      timestamp_type cleared_time;
-      optional_<mutual_aid_type> aid_type;
-      id_type officer_in_charge;
-      id_type member_making_report;
-   };
-
-   struct involement {
-      id_type person_id;
-      id_type business_id;
-      bool owner;
-   };
-
    infrastructure::session &session;
-   std::vector<fd_response> fire_department_responses;
-   timestamp_type date;
-   optional_<timestamp_type> controlled_time;
-   optional_<timestamp_type> last_unit_cleared_time;
+   infrastructure::incident_number_provider &incident_number_provider_;
+   incident_dispatcher dispatcher_;
    id_type location_id;
-   uint8_t incident_type_code;
-   std::vector<involement> involements;
+   uint16_t incident_type_code;
 
-   bool has_fire_department_been_dispatched(const id_type &fire_department_id) const;
-   void on_dispatched_as_primary_response(const id_type &fire_department_id);
+   inline bool has_been_sized_up() const {
+      return !location_id.is_nil();
+   }
+   void on_sizeup(const incident_sized_up &e);
 };
 
 }

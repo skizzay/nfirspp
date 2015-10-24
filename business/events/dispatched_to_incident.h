@@ -7,17 +7,17 @@
 namespace firepp {
 namespace business {
 
-class dispatched_as_mutual_aid final : public event_base {
+class dispatched_to_incident final : public event_base {
 public:
    using id_type = boost::uuids::uuid;
 
-   dispatched_as_mutual_aid(const id_type &user_id,
-                            const timestamp_type &ts_,
-                            const id_type &incident_id,
-                            const id_type &fire_department_id,
-                            const timestamp_type &alarm_time,
-                            size_t incident_number,
-                            const mutual_aid_type &mutual_aid) :
+   inline dispatched_to_incident(const id_type &user_id,
+                                 const timestamp_type &ts_,
+                                 const id_type &incident_id,
+                                 const id_type &fire_department_id,
+                                 const timestamp_type &alarm_time,
+                                 size_t incident_number,
+                                 const mutual_aid_type &mutual_aid) :
       event_base{user_id, ts_},
       incident_id_(incident_id),
       fire_department_id_(fire_department_id),

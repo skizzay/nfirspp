@@ -9,11 +9,14 @@ namespace infrastructure {
 
 class session {
 public:
+   using id_type = boost::uuids::uuid;
+   using timestamp_type = boost::posix_time::ptime;
+
    virtual ~session() = default;
 
-   virtual const boost::uuids::uuid & id() const = 0;
-   virtual const boost::uuids::uuid & user_id() const = 0;
-   virtual const boost::posix_time::ptime & time() const = 0;
+   virtual const id_type & id() const = 0;
+   virtual const id_type & user_id() const = 0;
+   virtual const timestamp_type & time() const = 0;
 };
 
 }

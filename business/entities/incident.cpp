@@ -1,88 +1,117 @@
 // vim: sw=3 ts=3 expandtab cindent
-#pragma once
-
 #include "business/entities/incident.h"
-#include "business/events/dispatched_as_primary_response.h"
+#include "business/events/dispatched_to_incident.h"
+#include "business/events/incident_sized_up.h"
 #include "utils/validation.h"
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 namespace firepp {
 namespace business {
 
+using std::begin;
+using std::end;
+using std::find_if_not;
+using std::find_if;
+using std::for_each;
+using std::tie;
+
+
 incident::incident(infrastructure::session &session_,
+                   infrastructure::incident_number_provider &inp,
                    const id_type &id_) :
    cddd::cqrs::artifact{id_},
-   session{session_}
+   session{session_},
+   incident_number_provider_{inp},
+   dispatcher_{*this},
+   location_id(boost::uuids::nil_uuid()),
+   incident_type_code(std::numeric_limits<uint16_t>::max())
 {
-   add_handler([this](const dispatched_as_primary_response &e) {
-         on_dispatched_as_primary_response(e);
+   add_handler([this](const incident_sized_up &e) {
+         on_sizeup(e);
       });
 }
 
 
-void incident::dispatch_as_primary_response(const id_type &fire_department_id,
-                                            const timestamp_type &alarm_time,
-                                            size_t incident_number,
-                                            const id_type &location_id,
-                                            uint8_t incident_type_code) {
-   if (!fire_department_responses.empty()) {
-      std::ostringstream error;
-      error << "Fire department '" << fire_department_id << "' cannot be dispatched as primary response to incident '" << id() << "'.";
-      throw cddd::cqrs::utils::entity_exists{error.str()};
-   }
+void incident::establish_initial_sizeup(const id_type &location_id,
+                                        uint16_t incident_type_code,
+                                        const optional<id_type> &reporter) {
+   (void)reporter; // Use this when we start tracking people.
+   incident_sized_up sizeup{session.user_id(),
+                            session.time(),
+                            id(),
+                            location_id,
+                            incident_type_code};
+   apply_change(sizeup);
+}
 
-   dispatched_as_primary_response change{session.user_id(),
-                                         session.time(),
-                                         id(),
-                                         fire_department_id,
-                                         alarm_time,
-                                         incident_number,
-                                         location_id,
-                                         incident_type_code};
+
+void incident::update_sizeup(const id_type &location_id,
+                             uint8_t incident_type_code) {
+#if 0
+   // Need to figure out how to perform validation
+   if (!has_been_sized_up()) {
+   }
+#endif
+   incident_sized_up sizeup{session.user_id(),
+                            session.time(),
+                            id(),
+                            location_id,
+                            incident_type_code};
+   apply_change(sizeup);
+}
+
+
+void incident::dispatch_for_response(const id_type &fire_department_id,
+                                     const timestamp_type &alarm_time,
+                                     const mutual_aid_type &type) {
+   size_t incident_number = incident_number_provider_.get_incident_number_for(id(),
+                                                                              fire_department_id,
+                                                                              alarm_time);
+   dispatched_to_incident change(session.user_id(),
+                                 session.time(),
+                                 id(),
+                                 fire_department_id,
+                                 alarm_time,
+                                 incident_number,
+                                 type);
    apply_change(change);
 }
 
 
-void incident::dispatch_as_mutual_aid(const id_type &fire_department_id,
-                                      const timestamp_type &alarm_time,
-                                      size_t incident_number,
-                                      const mutual_aid_type &type) {
-   if (has_fire_department_been_dispatched(fire_department_id)) {
+void incident::dispatch_multiple_units(const timestamp_type &alarm_time,
+                                       std::vector<std::tuple<id_type, mutual_aid_type>> responding_department_ids) {
+   if (responding_department_ids.empty()) {
       std::ostringstream error;
-      error << "Fire department '" << fire_department_id << "' already dispatched to incident '" << id() << "'.";
-      throw cddd::cqrs::utils::entity_exists{error.str()};
+      error << "Dispatching multiple units to incident '" << id() << "', but no units have been sepcified.";
+      throw std::runtime_error{error.str()};
    }
+   id_type fire_department_id;
+   mutual_aid_type type_of_mutual_aid;
 
-   dispatched_as_mutual_aid change{session.user_id(),
-                                   session.time(),
-                                   id(),
-                                   fire_department_id,
-                                   alarm_time,
-                                   incident_number,
-                                   type};
-   apply_change(change);
+   for_each(begin(responding_department_ids), end(responding_department_ids),
+      [&](const auto &response) {
+         tie(fire_department_id, type_of_mutual_aid) = response;
+         this->dispatch_for_response(fire_department_id, alarm_time, type_of_mutual_aid);
+      });
 }
 
 
-bool incident::has_fire_department_been_dispatched(const id_type &fire_department_id) const {
-   auto end = std::end(fire_department_responses);
-   return std::find_if(std::begin(fire_department_responses), end, [&fd_id=fire_department_id] (const auto &response) {
-         return fd_id == response.fire_department_id;
-      }) != end;
-}
-
-
-void incident::on_dispatched_as_primary_response(const dispatched_as_primary_response &e) {
-   fd_response response;
-   response.fire_department_id = e.fire_department_id();
-   response.incident_number = e.incident_number();
-   response.alarm_time = e.alarm_time();
-   fire_department_responses.push_back(response);
-
-   date = e.alarm_time();
+void incident::on_sizeup(const incident_sized_up &e) {
    location_id = e.location_id();
    incident_type_code = e.incident_type_code();
 }
+
+
+#if 0
+bool incident::has_different_alarm_time(const timestamp_type &alarm_time) const noexcept {
+
+   auto e = end(fire_department_responses);
+   return find_if_not(begin(fire_department_responses), e, [alarm_time](const fd_response &response) {
+         return response.alarm_time == alarm_time;
+      }) == e;
+}
+#endif
 
 }
 }
