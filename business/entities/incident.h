@@ -2,16 +2,21 @@
 #pragma once
 
 #include "business/entities/incident_dispatcher.h"
+#include "business/entities/incident_time_keeper.h"
 #include "business/values/fdid.h"
 #include "business/values/location.h"
 #include "business/values/mutual_aid_type.h"
-#include "infrastructure/incident_number_provider.h"
 #include "infrastructure/optional.h"
 #include "infrastructure/session.h"
 #include "cqrs/artifact.h"
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 
 namespace firepp {
+namespace infrastructure {
+class incident_number_provider;
+class fire_department_service;
+}
+
 namespace business {
 
 class incident_sized_up;
@@ -36,6 +41,7 @@ public:
 
    incident(infrastructure::session &session,
             infrastructure::incident_number_provider &inp,
+            infrastructure::fire_department_service &fds,
             const id_type &id);
 
    void establish_initial_sizeup(const id_type &location_id,
@@ -80,6 +86,7 @@ public:
 private:
    infrastructure::session &session;
    infrastructure::incident_number_provider &incident_number_provider_;
+   incident_time_keeper time_keeper_;
    incident_dispatcher dispatcher_;
    id_type location_id;
    uint16_t incident_type_code;

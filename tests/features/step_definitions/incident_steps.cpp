@@ -3,6 +3,7 @@
 #include "business/events/dispatched_to_incident.h"
 #include "infrastructure/incident_number_provider.h"
 #include "infrastructure/optional.h"
+#include "infrastructure/fire_department_service.h"
 #include "cqrs/domain_event.h"
 #include <fakeit.hpp>
 #include <kerchow/kerchow.h>
@@ -15,6 +16,7 @@ using cucumber::ScenarioScope;
 using namespace cddd::cqrs;
 using namespace firepp::business;
 using namespace fakeit;
+using boost::posix_time::time_from_string;
 namespace bu = boost::uuids;
 typedef bu::uuid id_type;
 using firepp::infrastructure::details_::optional_value;
@@ -43,6 +45,7 @@ public:
 
    Mock<firepp::infrastructure::session> session;
    Mock<firepp::infrastructure::incident_number_provider> incident_number_provider;
+   Mock<firepp::infrastructure::fire_department_service> fire_department_service;
    id_type session_id = generate_id();
    id_type session_user_id = generate_id();
    id_type location_id = generate_id();
@@ -53,13 +56,17 @@ public:
 GIVEN("^I have an incident '(.*)'") {
    REGEX_PARAM(std::string, incident_id);
    ScenarioScope<active_incident> context;
-   context->target.emplace(context->session.get(), context->incident_number_provider.get(), string_to_uuid(incident_id));
+   context->target.emplace(context->session.get(),
+                           context->incident_number_provider.get(),
+                           context->fire_department_service.get(),
+                           string_to_uuid(incident_id));
 }
 
 
-WHEN("^I dispatch the fire department '(.*)' as (.*) response") {
+WHEN("^I dispatch the fire department '(.*)' as (.*) response at '([^']*)'$") {
    REGEX_PARAM(std::string, fire_department_id);
    REGEX_PARAM(std::string, dispatch_type);
+   REGEX_PARAM(std::string, alarm_time);
    ScenarioScope<active_incident> context;
    When(Method(context->session, user_id)).Return(context->session_user_id);
    When(Method(context->session, time)).Return(now());
@@ -78,14 +85,15 @@ WHEN("^I dispatch the fire department '(.*)' as (.*) response") {
    }
 
    context->target->dispatch_for_response(string_to_uuid(fire_department_id),
-                                          boost::posix_time::microsec_clock::universal_time(),
+                                          time_from_string(alarm_time),
                                           mutual_aid);
 }
 
 
-THEN("^the fire department '(.*)' should have been (.*) dispatched") {
+THEN("^the fire department '(.*)' should have been (.*) dispatched at '([^']*)'$") {
    REGEX_PARAM(std::string, fire_department_id);
    REGEX_PARAM(std::string, dispatch_type);
+   REGEX_PARAM(std::string, alarm_time);
    ScenarioScope<active_incident> context;
    mutual_aid_type mutual_aid = mutual_aid_type::primary;
 
@@ -105,7 +113,8 @@ THEN("^the fire department '(.*)' should have been (.*) dispatched") {
          if (is_event<dispatched_to_incident>(*evt)) {
             const dispatched_to_incident &response = unsafe_event_cast<dispatched_to_incident>(*evt);
             return response.mutual_aid() == mutual_aid &&
-                   response.fire_department_id() == string_to_uuid(fire_department_id);
+                   response.fire_department_id() == string_to_uuid(fire_department_id) &&
+                   response.alarm_time() == time_from_string(alarm_time);
          }
          return false;
       });

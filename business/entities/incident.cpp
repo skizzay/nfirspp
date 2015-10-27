@@ -2,6 +2,8 @@
 #include "business/entities/incident.h"
 #include "business/events/dispatched_to_incident.h"
 #include "business/events/incident_sized_up.h"
+#include "infrastructure/fire_department_service.h"
+#include "infrastructure/incident_number_provider.h"
 #include "utils/validation.h"
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -19,10 +21,12 @@ using std::tie;
 
 incident::incident(infrastructure::session &session_,
                    infrastructure::incident_number_provider &inp,
+                   infrastructure::fire_department_service &fds,
                    const id_type &id_) :
    cddd::cqrs::artifact{id_},
    session{session_},
    incident_number_provider_{inp},
+   time_keeper_{*this, fds},
    dispatcher_{*this},
    location_id(boost::uuids::nil_uuid()),
    incident_type_code(std::numeric_limits<uint16_t>::max())
