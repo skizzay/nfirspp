@@ -2,6 +2,7 @@
 #pragma once
 
 #include "cqrs/artifact_view.h"
+#include "business/entities/bits/response_table.h"
 #include "business/values/mutual_aid_type.h"
 #include "infrastructure/optional.h"
 #include "infrastructure/session.h"
@@ -30,9 +31,8 @@ public:
 
 private:
    void on_dispatched_to_incident(const dispatched_to_incident &);
-   fd_response &get_response_for_fire_department(const id_type &fire_department_id);
 
-   std::vector<fd_response> fire_department_responses;
+   details_::response_table<fd_response, &fd_response::fire_department_id> responses;
 };
 
 }
