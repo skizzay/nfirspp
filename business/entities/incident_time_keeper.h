@@ -16,6 +16,7 @@ namespace business {
 
 class dispatched_to_incident;
 class firefighter_arrived_on_scene;
+class firefighter_cleared_from_scene;
 
 class incident_time_keeper final : public cddd::cqrs::artifact_view {
 public:
@@ -35,6 +36,7 @@ public:
 private:
    void on_dispatched_to_incident(const dispatched_to_incident &);
    void on_firefighter_arrived_on_scene(const firefighter_arrived_on_scene &);
+   void on_firefighter_cleared_from_scene(const firefighter_cleared_from_scene &);
 
    details_::response_table<fd_response, &fd_response::fire_department_id> responses;
    infrastructure::fire_department_service &fire_department_service;

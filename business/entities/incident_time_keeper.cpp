@@ -2,6 +2,7 @@
 #include "business/entities/incident_time_keeper.h"
 #include "business/events/dispatched_to_incident.h"
 #include "business/events/firefighter_arrived_on_scene.h"
+#include "business/events/firefighter_cleared_from_scene.h"
 #include "infrastructure/fire_department_service.h"
 #include <boost/uuid/nil_generator.hpp>
 #include <algorithm>
@@ -22,6 +23,9 @@ incident_time_keeper::incident_time_keeper(cddd::cqrs::artifact &a,
    add_handler([this](const firefighter_arrived_on_scene &e) {
          on_firefighter_arrived_on_scene(e);
       });
+   add_handler([this](const firefighter_cleared_from_scene &e) {
+         on_firefighter_cleared_from_scene(e);
+      });
 }
 
 
@@ -32,10 +36,21 @@ void incident_time_keeper::on_dispatched_to_incident(const dispatched_to_inciden
 
 
 void incident_time_keeper::on_firefighter_arrived_on_scene(const firefighter_arrived_on_scene &e) {
+   // TODO: Use future
    id_type fire_department_id = fire_department_service.get_fire_department_id_for_firefighter(e.firefighter_id());
    fd_response &response = responses.get_response(fire_department_id);
    if ((e.arrival_time() < response.arrival_time) || (response.arrival_time.is_not_a_date_time())) {
       response.arrival_time = e.arrival_time();
+   }
+}
+
+
+void incident_time_keeper::on_firefighter_cleared_from_scene(const firefighter_cleared_from_scene &e) {
+   // TODO: Use future
+   id_type fire_department_id = fire_department_service.get_fire_department_id_for_firefighter(e.firefighter_id());
+   fd_response &response = responses.get_response(fire_department_id);
+   if ((e.cleared_time() > response.last_unit_cleared_time) || (response.last_unit_cleared_time.is_not_a_date_time())) {
+      response.last_unit_cleared_time = e.cleared_time();
    }
 }
 
